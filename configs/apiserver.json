@@ -1,0 +1,1 @@
+{"bind_addr":":8087","master_seaweedfs":"127.0.0.1", "filer_seaweedfs":"127.0.0.1", "port_seaweedfs_filer":":8888"}
