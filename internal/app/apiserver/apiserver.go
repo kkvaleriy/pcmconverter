@@ -1,6 +1,7 @@
 package apiserver
 
 import (
+	"bytes"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -37,21 +38,33 @@ func (s *APIserver) configRouter() {
 
 func (s *APIserver) handleHello() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var wav bytes.Buffer
 		audioConfig := NewAudioFile()
 		err := json.Unmarshal([]byte(r.Header.Get("Data")), audioConfig)
 		if err != nil {
 			log.Printf("error unmarshal input json: %s", err.Error())
 		}
+		wavConfig := NewWavFormat(audioConfig)
 		firstPCM := s.Seaweedfs.Download(audioConfig, 1)
+		if audioConfig.Chanels == 1 {
+			wav, err = MonoPCMtoWav(*firstPCM, wavConfig)
+			if err != nil {
+				log.Printf("error convert Monopcm2wav: %s", err.Error())
+			}
+		}
+		log.Printf("THIS: %v", audioConfig.Chanels)
+		if audioConfig.Chanels == 2 {
+			secondPCM := s.Seaweedfs.Download(audioConfig, 2)
+			wav, err = StereoPCMtoWav(*firstPCM, *secondPCM, wavConfig)
+			if err != nil {
+				log.Printf("error convert Stereopcm2wav: %s", err.Error())
+			}
+		}
 		//wav, err := pcm2wav.ConvertBytes(firstPCM.Bytes(), int(audioFileConfig.Chanels), int(audioFileConfig.SampleRate), int(audioFileConfig.BitRate))
 		//if err != nil {
 		//	log.Printf("error convert pcm2wav: %s", err.Error())
 		//}
-		wavConfig := NewWavFormat(audioConfig)
-		wav, err := MonoPCMtoWav(*firstPCM, wavConfig)
-		if err != nil {
-			log.Printf("error convert pcm2wav: %s", err.Error())
-		}
+
 		file, err := os.Create("hello.wav") // test file
 		defer file.Close()
 		file.Write(wav.Bytes())
