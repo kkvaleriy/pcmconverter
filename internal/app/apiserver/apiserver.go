@@ -37,18 +37,24 @@ func (s *APIserver) configRouter() {
 
 func (s *APIserver) handleHello() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		audioFileConfig := NewAudioFile()
-		err := json.Unmarshal([]byte(r.Header.Get("Data")), audioFileConfig)
+		audioConfig := NewAudioFile()
+		err := json.Unmarshal([]byte(r.Header.Get("Data")), audioConfig)
 		if err != nil {
 			log.Printf("error unmarshal input json: %s", err.Error())
 		}
-		firstPCM := s.Seaweedfs.Download(audioFileConfig, 1)
+		firstPCM := s.Seaweedfs.Download(audioConfig, 1)
 		//wav, err := pcm2wav.ConvertBytes(firstPCM.Bytes(), int(audioFileConfig.Chanels), int(audioFileConfig.SampleRate), int(audioFileConfig.BitRate))
 		//if err != nil {
 		//	log.Printf("error convert pcm2wav: %s", err.Error())
 		//}
-		file, err := os.Create("hello.wav")
+		wavConfig := NewWavFormat(audioConfig)
+		wav, err := MonoPCMtoWav(*firstPCM, wavConfig)
+		if err != nil {
+			log.Printf("error convert pcm2wav: %s", err.Error())
+		}
+		file, err := os.Create("hello.wav") // test file
 		defer file.Close()
-		file.Write(firstPCM.Bytes())
+		file.Write(wav.Bytes())
+
 	}
 }
