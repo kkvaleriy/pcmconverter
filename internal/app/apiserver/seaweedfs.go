@@ -50,3 +50,10 @@ func (swfs *Seaweedfs) Download(audioFile *AudioFile, chanel int8) *bytes.Buffer
 	log.Println(swfs.url + audioFile.Bucket + filename)
 	return &buf
 }
+
+func (swfs *Seaweedfs) Uploadtest(audioFile *AudioFile, wav *bytes.Buffer) (*goseaweedfs.FilerUploadResult, error) {
+	rez, err := swfs.Filer.Upload(wav, 1048576, swfs.url+audioFile.Bucket+audioFile.FileOne+".wav", "col", "")
+	log.Println(int64(wav.Available()))
+	log.Println(audioFile.Bucket + audioFile.FileOne + ".wav")
+	return rez, err
+}

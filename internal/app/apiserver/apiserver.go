@@ -65,6 +65,12 @@ func (s *APIserver) handleHello() http.HandlerFunc {
 		//	log.Printf("error convert pcm2wav: %s", err.Error())
 		//}
 
+		rez, err := s.Seaweedfs.Uploadtest(audioConfig, &wav)
+		if err != nil {
+			log.Printf("error upload to seaweedfs: %s", err.Error())
+		}
+		log.Printf("upload to seaweedfs: <%s> <%s> <%s>", rez.Name, rez.Size, rez.FileURL)
+
 		file, err := os.Create("hello.wav") // test file
 		defer file.Close()
 		file.Write(wav.Bytes())
